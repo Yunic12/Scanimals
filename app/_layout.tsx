@@ -1,24 +1,47 @@
-import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
+import React from 'react';
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
-import 'react-native-reanimated';
+import { AppProvider, useApp } from '../context/AppContext';
+import { View, ActivityIndicator, StyleSheet } from 'react-native';
+import { C } from '../constants/theme';
+import StateInspector from '../components/StateInspector'; // 👈 Import state inspector
 
-import { useColorScheme } from '@/hooks/use-color-scheme';
+function RootNav() {
+  const { loading, isAuthenticated } = useApp();
 
-export const unstable_settings = {
-  anchor: '(tabs)',
-};
-
-export default function RootLayout() {
-  const colorScheme = useColorScheme();
+  if (loading) {
+    return (
+      <View style={s.center}>
+        <ActivityIndicator size="large" color={C.pri} />
+      </View>
+    );
+  }
 
   return (
-    <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-      <Stack>
-        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-        <Stack.Screen name="modal" options={{ presentation: 'modal', title: 'Modal' }} />
-      </Stack>
-      <StatusBar style="auto" />
-    </ThemeProvider>
+    <Stack screenOptions={{ headerShown: false }}>
+      {!isAuthenticated ? (
+        <Stack.Screen name="(auth)" />
+      ) : (
+        <>
+          <Stack.Screen name="(tabs)" />
+          <Stack.Screen name="finder-view" />
+          <Stack.Screen name="showcase" />
+        </>
+      )}
+    </Stack>
   );
 }
+
+export default function RootLayout() {
+  return (
+    <AppProvider>
+      <StatusBar style="dark" />
+      <RootNav />
+      <StateInspector /> {/* 👈 Renders live state inspector globally */}
+    </AppProvider>
+  );
+}
+
+const s = StyleSheet.create({
+  center: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: C.bg },
+});
